@@ -1,1 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Create Exam | Exammettl Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='Style.css') }}"/>
+</head>
+<body>
+  <div class="container" style="max-width:620px;">
+    <div class="page-header">
+      <h2>📅 Create New Exam</h2>
+      <a href="/admin"><button class="btn-secondary">← Admin</button></a>
+    </div>
+    {% if success %}<p class="success-msg">{{ success }}</p>{% endif %}
+    {% if error %}<p class="error-msg">{{ error }}</p>{% endif %}
+    <form method="POST">
+      <label>Exam Title *</label>
+      <input type="text" name="title" placeholder="e.g. Web Development Mid-Term" required/>
+      <label>Duration (minutes)</label>
+      <input type="number" name="duration" value="10" min="1" required/>
+      <div class="options-grid">
+        <div>
+          <label>Start Time</label>
+          <input type="datetime-local" name="start_time"/>
+        </div>
+        <div>
+          <label>End Time</label>
+          <input type="datetime-local" name="end_time"/>
+        </div>
+      </div>
+      <label>Enrollment Type</label>
+      <select name="enrollment_type">
+        <option value="open">Open — anyone can take</option>
+        <option value="closed">Closed — enrolled candidates only</option>
+      </select>
+      <div class="options-grid">
+        <div>
+          <label>Filter by Subject <span style="color:var(--text-muted);font-size:11px;">(optional)</span></label>
+          <input type="text" name="subject_filter" placeholder="e.g. Web Development"/>
+        </div>
+        <div>
+          <label>Filter by Difficulty</label>
+          <select name="difficulty_filter">
+            <option value="">All Difficulties</option>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+      </div>
+      <br/>
+      <button type="submit" style="width:100%;">Create Exam</button>
+    </form>
+  </div>
 
+<script>
+
+// ── Custom Dropdown Initializer ─────────────────────────────────────────────
+function initCustomDropdowns() {
+  document.querySelectorAll('select:not(.cd-hidden)').forEach(function(sel) {
+    var wrap = document.createElement('div');
+    wrap.className = 'cd-wrap';
+    sel.parentNode.insertBefore(wrap, sel);
+    wrap.appendChild(sel);
+    sel.classList.add('cd-hidden');
+    var trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'cd-trigger';
+    var labelSpan = document.createElement('span');
+    var arrow = document.createElement('span');
+    arrow.className = 'cd-arrow';
+    arrow.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path fill="currentColor" d="M6 8L1 3h10z"/></svg>';
+    trigger.appendChild(labelSpan);
+    trigger.appendChild(arrow);
+    wrap.appendChild(trigger);
+    var menu = document.createElement('div');
+    menu.className = 'cd-menu';
+    wrap.appendChild(menu);
+    function buildMenu() {
+      menu.innerHTML = '';
+      Array.from(sel.options).forEach(function(opt) {
+        var item = document.createElement('div');
+        item.className = 'cd-item' + (opt.disabled ? ' disabled' : '') + (opt.selected ? ' selected' : '');
+        item.textContent = opt.text;
+        item.dataset.value = opt.value;
+        if (!opt.disabled) {
+          item.addEventListener('click', function() {
+            sel.value = opt.value;
+            sel.dispatchEvent(new Event('change', {bubbles:true}));
+            updateTriggerLabel();
+            closeMenu();
+          });
+        }
+        menu.appendChild(item);
+      });
+    }
+    function updateTriggerLabel() {
+      var chosen = sel.options[sel.selectedIndex];
+      labelSpan.textContent = chosen ? chosen.text : '';
+      menu.querySelectorAll('.cd-item').forEach(function(it, i) {
+        it.classList.toggle('selected', i === sel.selectedIndex);
+      });
+    }
+    buildMenu();
+    updateTriggerLabel();
+    function openMenu() {
+      document.querySelectorAll('.cd-menu.open').forEach(function(m){ m.classList.remove('open'); });
+      document.querySelectorAll('.cd-trigger.open').forEach(function(t){ t.classList.remove('open'); });
+      menu.classList.add('open');
+      trigger.classList.add('open');
+    }
+    function closeMenu() {
+      menu.classList.remove('open');
+      trigger.classList.remove('open');
+    }
+    trigger.addEventListener('click', function(e) {
+      e.stopPropagation();
+      menu.classList.contains('open') ? closeMenu() : openMenu();
+    });
+    document.addEventListener('click', function() { closeMenu(); });
+    menu.addEventListener('click', function(e){ e.stopPropagation(); });
+    sel.addEventListener('change', updateTriggerLabel);
+  });
+}
+document.addEventListener('DOMContentLoaded', initCustomDropdowns);
+
+// Ripple effect on buttons
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('button');
+  if (!btn) return;
+  var r = document.createElement('span');
+  r.classList.add('ripple');
+  var rect = btn.getBoundingClientRect();
+  var size = Math.max(rect.width, rect.height) * 2;
+  r.style.cssText = 'width:' + size + 'px;height:' + size + 'px;left:' + (e.clientX - rect.left - size/2) + 'px;top:' + (e.clientY - rect.top - size/2) + 'px;';
+  btn.appendChild(r);
+  setTimeout(function() { r.remove(); }, 500);
+});
+// Smooth page-out on link navigation
+document.querySelectorAll('a[href]').forEach(function(a) {
+  a.addEventListener('click', function(e) {
+    var href = a.getAttribute('href');
+    if (!href || href === '#' || href.startsWith('javascript') || href.startsWith('mailto')) return;
+    e.preventDefault();
+    document.body.style.transition = 'opacity .25s ease';
+    document.body.style.opacity = '0';
+    setTimeout(function() { window.location.href = href; }, 240);
+  });
+});
+</script>
+</body>
+</html>
